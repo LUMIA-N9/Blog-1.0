@@ -1,0 +1,10 @@
+# www
+test*.py
+
+
+#vscode
+.vscode/
+
+
+#python
+__pycache__
