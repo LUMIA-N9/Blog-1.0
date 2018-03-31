@@ -5,6 +5,8 @@ from urllib import parse
 from aiohttp import web
 from apis import APIError
 
+#from apis import APIError
+
 
 def get(path):
     '''
@@ -99,6 +101,7 @@ class RequestHandler(object):
         self._required_kw_args = get_required_kw_args(fn)
 
     async def __call__(self, request):
+        logging.info('now is in RequestHandler:__call__')
         kw = None
         if self._has_var_kw_arg or self._has_named_kw_args or self._required_kw_args:
             if request.method == 'POST':
@@ -124,7 +127,7 @@ class RequestHandler(object):
                     for k, v in parse.parse_qs(qs, True).items():
                         kw[k] = v[0]
         if kw is None:
-            kw - dict(**request.match_info)
+            kw = dict(**request.match_info)
         else:
             if not self._has_var_kw_arg and self._named_kw_args:
                 copy = dict()
@@ -168,7 +171,9 @@ def add_route(app, fn):
     logging.info('add route %s %s => %s(%s)' %
                  (method, path, fn.__name__,
                   ','.join(inspect.signature(fn).parameters.keys())))
-    app.router.add_route(method, path, RequestHandler(app, fn))
+    app.router.add_route(
+        method, path, RequestHandler(app, fn)
+    )  # RequestHandler定义了__call__()方法，所以到时候可以直接调用RequestHandler(app,fn)(request)
 
 
 def add_routes(app, module_name):

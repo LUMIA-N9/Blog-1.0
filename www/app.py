@@ -11,16 +11,19 @@ import orm
 from coroweb import add_routes, add_static
 
 
-def init_jinja2(app, **kw):
+def init_jinja2(app, **kw):  # 设置模板路径，以及某些基础配置
     logging.info('init jinja2...')
     options = dict(
-        autoescape=kw.get('autoescape', True),
+        autoescape=kw.get(
+            'autoescape', True
+        ),  # XML/HTML自动转义，default=False。就是在渲染模板的时候自动把变量中的<>&等字符转换成&lt;&gt;&amp;
         block_start_string=kw.get('block_start_string', '{%'),
         block_end_string=kw.get('block_end_string', '%}'),
         variable_start_string=kw.get('variable_start_string', '{{'),
         variable_end_string=kw.get('variable_end_string', '}}'),
-        auto_reload=kw.get('auto_reload', True))
-    path = kw.get('path', None)
+        auto_reload=kw.get('auto_reload', True)
+    )  # 如果设为True，Jinja会在使用Template时检查模板文件的状态，如果模板有修改，则重新加载模板，如果对性能要求较高，可以将此值设为False
+    path = kw.get('path', None)  # 此path为模板路径，而非GET / 路径
     if path is None:
         path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), 'templates')
@@ -74,6 +77,9 @@ async def response_factory(app, handler):
             return resp
         if isinstance(r, dict):
             template = r.get('__template__')
+            users = r.get('users')
+            print(users)
+            print('template is %s ' % template)
             if template is None:
                 resp = web.Response(
                     body=json.dumps(
