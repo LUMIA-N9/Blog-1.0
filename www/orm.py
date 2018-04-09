@@ -27,10 +27,11 @@ async def create_pool(loop, **kw):
 
 async def select(sql, args, size=None):
     log(sql, args)
+    logging.info('args in select is: %s ' % args)
     global __pool
     with (await __pool) as conn:
         cur = await conn.cursor(aiomysql.DictCursor)
-        await cur.execute(sql.replace('?', '%'), args or ())
+        await cur.execute(sql.replace('?', '%s'), args or ())
         if size:
             rs = await cur.fetchmany(size)  # 返回指定数量的元组
         else:
@@ -205,6 +206,7 @@ class Model(dict, metaclass=ModelMetaclass):
                 args.extend(limit)
             else:
                 raise ValueError('Invalid limit value: %s' % str(limit))
+        logging.info('SQL is : %s and args is : %s' % (sql, args))
         rs = await select(' '.join(sql), args)
         return [cls(**r) for r in rs]
 
@@ -218,6 +220,7 @@ class Model(dict, metaclass=ModelMetaclass):
         rs = await select(' '.join(sql), args, 1)
         if len(rs) == 0:
             return None
+        logging.info('findNumber return rs is :%s' % rs)
         return rs[0]['_num_']
 
     @classmethod  # 定义类方法，不用先实例化对象再调用，可以直接用类名调用
@@ -232,6 +235,7 @@ class Model(dict, metaclass=ModelMetaclass):
     async def save(self):
         args = list(map(self.getValueOrDefault, self.__fields__))
         args.append(self.getValueOrDefault(self.__primary_key__))
+        logging.info('args is %s:' % args)
         rows = await execute(self.__insert__, args)
         if rows != 1:
             logging.warn('failed to insert record: affected rows: %s' % rows)
